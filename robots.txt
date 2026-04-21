@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+# Block admin panel from being indexed
+Disallow: /news-admin.html
+
+Sitemap: https://eastern-aero.com/sitemap.xml
