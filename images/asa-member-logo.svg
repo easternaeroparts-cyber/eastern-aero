@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a3a6b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d2246;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f0c040;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#c8922a;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <\!-- Outer gold ring -->
+  <circle cx="100" cy="100" r="97" fill="url(#goldGrad)" />
+  <\!-- Inner navy circle -->
+  <circle cx="100" cy="100" r="90" fill="url(#bgGrad)" />
+  <\!-- Inner gold accent ring -->
+  <circle cx="100" cy="100" r="83" fill="none" stroke="url(#goldGrad)" stroke-width="2" />
+
+  <\!-- Curved text: AVIATION SUPPLIERS ASSOCIATION -->
+  <path id="topArc" d="M 22,100 A 78,78 0 0,1 178,100" fill="none" />
+  <text font-family="Arial, sans-serif" font-size="10.5" font-weight="700" fill="#f0c040" letter-spacing="2.2">
+    <textPath href="#topArc" startOffset="50%" text-anchor="middle">AVIATION SUPPLIERS ASSOCIATION</textPath>
+  </text>
+
+  <\!-- Curved text: MEMBER bottom -->
+  <path id="bottomArc" d="M 34,120 A 78,78 0 0,0 166,120" fill="none" />
+  <text font-family="Arial, sans-serif" font-size="11.5" font-weight="700" fill="#f0c040" letter-spacing="5">
+    <textPath href="#bottomArc" startOffset="50%" text-anchor="middle">MEMBER</textPath>
+  </text>
+
+  <\!-- Center wings / decorative line -->
+  <line x1="38" y1="108" x2="162" y2="108" stroke="#f0c040" stroke-width="1" opacity="0.5"/>
+
+  <\!-- Stars top left and right -->
+  <polygon points="46,68 48,74 54,74 49,78 51,84 46,80 41,84 43,78 38,74 44,74" fill="#f0c040" opacity="0.85"/>
+  <polygon points="154,68 156,74 162,74 157,78 159,84 154,80 149,84 151,78 146,74 152,74" fill="#f0c040" opacity="0.85"/>
+
+  <\!-- ASA large text -->
+  <text x="100" y="88" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="36" font-weight="900" fill="#ffffff" letter-spacing="2">ASA</text>
+
+  <\!-- Divider line -->
+  <line x1="60" y1="95" x2="140" y2="95" stroke="#f0c040" stroke-width="1.5" opacity="0.7"/>
+
+  <\!-- 100 text -->
+  <text x="100" y="112" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="18" font-weight="900" fill="#f0c040" letter-spacing="4">100</text>
+
+  <\!-- Small decorative dots -->
+  <circle cx="65" cy="104" r="2" fill="#f0c040" opacity="0.6"/>
+  <circle cx="135" cy="104" r="2" fill="#f0c040" opacity="0.6"/>
+</svg>

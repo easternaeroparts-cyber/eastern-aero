@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parts Inventory | Eastern Aero</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    body { background: #0d1b2a; color: rgba(255,255,255,.8); }
+
+    /* ---- Page header ---- */
+    .inv-page-hero {
+      background: linear-gradient(160deg, #0d1b2a 0%, #1a2e45 60%, #0d1b2a 100%);
+      padding: 8rem 0 4rem;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .inv-page-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg width='48' height='48' viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M24 20v8M20 24h8' stroke='%23ffffff' stroke-width='1.5' stroke-linecap='round' opacity='0.07'/%3E%3C/svg%3E");
+      background-size: 48px 48px;
+      pointer-events: none;
+    }
+    .inv-page-hero .container { position: relative; z-index: 1; }
+    .inv-back {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      color: rgba(255,255,255,.5);
+      font-size: .85rem;
+      margin-bottom: 1.5rem;
+      transition: color .3s;
+    }
+    .inv-back:hover { color: var(--white); }
+    .inv-back svg { fill: currentColor; }
+    .inv-page-hero h1 { color: var(--white); margin-bottom: .75rem; }
+    .inv-page-hero p  { color: rgba(255,255,255,.55); max-width: 560px; font-size: 1.05rem; }
+
+    /* ---- Filters ---- */
+    .inv-filters {
+      background: rgba(255,255,255,.04);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      padding: 1.25rem 0;
+      position: sticky;
+      top: 70px;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+    .inv-filters-inner {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .inv-search {
+      flex: 1;
+      min-width: 240px;
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 10px;
+      padding: .6rem 1rem;
+    }
+    .inv-search svg { fill: rgba(255,255,255,.4); flex-shrink: 0; }
+    .inv-search input {
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--white);
+      font-size: .9rem;
+      width: 100%;
+    }
+    .inv-search input::placeholder { color: rgba(255,255,255,.35); }
+    .inv-search-btn {
+      background: var(--red);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: .65rem 1.4rem;
+      font-size: .88rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      cursor: pointer;
+      transition: background .2s, transform .15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .inv-search-btn:hover { background: #a8242a; transform: translateY(-1px); }
+    .inv-filter-select {
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 10px;
+      padding: .6rem 1rem;
+      color: rgba(255,255,255,.75);
+      font-size: .88rem;
+      outline: none;
+      cursor: pointer;
+    }
+    .inv-filter-select option { background: #1a2e45; }
+    .inv-count {
+      margin-left: auto;
+      font-size: .82rem;
+      color: rgba(255,255,255,.4);
+      white-space: nowrap;
+    }
+
+    /* ---- Table ---- */
+    .inv-page-body { padding: 3rem 0 5rem; }
+    .inv-full-wrap {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    .inv-full-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .9rem;
+    }
+    .inv-full-table thead tr { background: rgba(255,255,255,.07); }
+    .inv-full-table th {
+      padding: 1rem 1.5rem;
+      text-align: left;
+      font-size: .72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: rgba(255,255,255,.4);
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+    }
+    .inv-full-table th:hover { color: rgba(255,255,255,.75); }
+    .inv-full-table td {
+      padding: 1rem 1.5rem;
+      color: rgba(255,255,255,.75);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .inv-full-table tbody tr:last-child td { border-bottom: none; }
+    .inv-full-table tbody tr { transition: background .2s; }
+    .inv-full-table tbody tr:hover { background: rgba(255,255,255,.05); cursor: pointer; }
+    .inv-full-table td.pn {
+      font-family: 'Courier New', monospace;
+      font-size: .85rem;
+      color: #7ec8f5;
+      font-weight: 600;
+    }
+    .inv-full-table td.desc { max-width: 240px; }
+
+    /* ---- Detail panel (expandable row) ---- */
+    .inv-detail-row { display: none; }
+    .inv-detail-row.open { display: table-row; }
+    .inv-detail-cell {
+      background: rgba(255,255,255,.03);
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .inv-detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1.25rem 2rem;
+      margin-bottom: 1.25rem;
+    }
+    .inv-detail-field label {
+      font-size: .7rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: rgba(255,255,255,.35);
+      display: block;
+      margin-bottom: .25rem;
+    }
+    .inv-detail-field span {
+      font-size: .9rem;
+      color: rgba(255,255,255,.85);
+      font-weight: 500;
+    }
+    .inv-detail-actions { display: flex; gap: .75rem; flex-wrap: wrap; }
+
+    /* ---- Pagination ---- */
+    .inv-pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .4rem;
+      padding: 1.5rem;
+      border-top: 1px solid rgba(255,255,255,.08);
+      flex-wrap: wrap;
+    }
+    .page-btn {
+      min-width: 36px; height: 36px;
+      padding: 0 .6rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      color: rgba(255,255,255,.6);
+      font-size: .85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .2s, border-color .2s, color .2s, transform .15s;
+      user-select: none;
+    }
+    .page-btn:hover:not(:disabled) {
+      background: rgba(255,255,255,.12);
+      border-color: rgba(255,255,255,.25);
+      color: var(--white);
+      transform: translateY(-1px);
+    }
+    .page-btn.active {
+      background: var(--red);
+      border-color: var(--red);
+      color: var(--white);
+    }
+    .page-btn:disabled {
+      opacity: .28;
+      cursor: default;
+      transform: none;
+    }
+
+    /* ---- RFQ CTA ---- */
+    .inv-cta {
+      background: linear-gradient(135deg, rgba(192,39,45,.15) 0%, rgba(29,52,97,.3) 100%);
+      border: 1px solid rgba(192,39,45,.25);
+      border-radius: 20px;
+      padding: 2.5rem;
+      text-align: center;
+      margin-top: 2.5rem;
+    }
+    .inv-cta h3 { color: var(--white); margin-bottom: .6rem; }
+    .inv-cta p  { color: rgba(255,255,255,.55); margin-bottom: 1.5rem; font-size: .95rem; }
+    .inv-cta .btn-group { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+    /* hidden rows for JS filter */
+    tr.hidden { display: none; }
+
+    /* individual units list inside expanded row */
+    .inv-units-label {
+      font-size: .7rem; text-transform: uppercase; letter-spacing: .08em;
+      color: rgba(255,255,255,.35); margin: 1rem 0 .5rem;
+    }
+    .inv-units-list { display: flex; flex-direction: column; gap: .35rem; margin-bottom: 1.2rem; }
+    .inv-unit-row {
+      display: flex; align-items: center; gap: 1rem;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 8px; padding: .45rem .9rem;
+      font-size: .85rem; color: rgba(255,255,255,.75);
+    }
+    .inv-unit-num {
+      width: 20px; height: 20px; border-radius: 50%;
+      background: rgba(255,255,255,.08);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .7rem; font-weight: 700; color: rgba(255,255,255,.5);
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar (reuse main) -->
+  <nav id="navbar">
+    <div class="container">
+      <div class="nav-inner">
+        <a href="index.html" class="nav-logo" aria-label="Eastern Aero Home">
+          <img src="images/eastern-aero-logo-clean.png" alt="Eastern Aero" class="nav-logo-img" />
+        </a>
+        <ul class="nav-links">
+          <li><a href="index.html#about">About</a></li>
+          <li><a href="index.html#services">Services</a></li>
+          <li><a href="index.html#why-us">Why Us</a></li>
+          <li><a href="index.html#fleet">Fleet Support</a></li>
+          <li><a href="index.html#gallery">Gallery</a></li>
+          <li><a href="index.html#contact">Contact</a></li>
+        </ul>
+        <a href="index.html#contact" class="btn btn-primary nav-cta">Get a Quote</a>
+        <button class="nav-hamburger" id="hamburger" aria-label="Open menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Mobile Nav -->
+  <div class="mobile-nav" id="mobile-nav">
+    <button class="mobile-nav-close" id="mobile-close">&times;</button>
+    <img src="images/logo-emblem-photo.png" alt="Eastern Aero" style="height:64px;width:auto;margin-bottom:1rem;"/>
+    <a href="index.html#about">About</a>
+    <a href="index.html#services">Services</a>
+    <a href="index.html#gallery">Gallery</a>
+    <a href="index.html#fleet">Fleet Support</a>
+    <a href="index.html#why-us">Why Us</a>
+    <a href="index.html#contact">Contact</a>
+    <a href="index.html#contact" class="btn btn-primary">Get a Quote</a>
+  </div>
+
+  <!-- Page Hero -->
+  <div class="inv-page-hero">
+    <div class="container">
+      <a href="index.html" class="inv-back">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
+        Back to Home
+      </a>
+      <span class="section-label">Parts Inventory</span>
+      <h1>Available Parts &amp; Components</h1>
+      <p>Browse our inventory of 50,000+ aviation parts — new, overhauled, and serviceable — with full traceability documentation.</p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="inv-filters">
+    <div class="container">
+      <div class="inv-filters-inner">
+        <div class="inv-search">
+          <svg viewBox="0 0 24 24" width="18" height="18"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          <input type="text" id="inv-search-input" placeholder="Enter part number or description and press Search…" />
+        </div>
+        <button class="inv-search-btn" id="inv-search-btn">Search</button>
+        <select class="inv-filter-select" id="filter-condition">
+          <option value="">All Conditions</option>
+          <option value="Overhauled">Overhauled</option>
+          <option value="Serviceable">Serviceable</option>
+          <option value="As Removed">As Removed</option>
+          <option value="New">New</option>
+          <option value="New Surplus">New Surplus</option>
+          <option value="Repaired">Repaired</option>
+          <option value="Functional New">Functional New</option>
+        </select>
+        <select class="inv-filter-select" id="filter-aircraft">
+          <option value="">All Categories</option>
+          <option value="ENGINES">Engines</option>
+          <option value="AIRFRAME">Airframe</option>
+          <option value="AVIONICS">Avionics</option>
+          <option value="ELECTRICAL">Electrical</option>
+          <option value="AIRCRAFT">Aircraft</option>
+          <option value="COCKPIT PANELS">Cockpit Panels</option>
+          <option value="PUMP">Pump</option>
+        </select>
+        <span class="inv-count" id="inv-count">Showing 20 parts</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inventory Table -->
+  <div class="inv-page-body">
+    <div class="container">
+      <div id="inv-loading" style="text-align:center;padding:4rem 0;color:rgba(255,255,255,.4);font-size:.95rem;">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2" style="display:block;margin:0 auto 1rem;animation:spin 1s linear infinite"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        Loading inventory…
+      </div>
+      <div class="inv-full-wrap" id="inv-wrap" style="display:none">
+        <table class="inv-full-table" id="inv-table">
+          <thead>
+            <tr>
+              <th>Part Number</th>
+              <th>Description</th>
+              <th>Condition</th>
+              <th>Qty</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="inv-tbody">
+
+            <!-- rows injected by JS from data/inventory.csv -->
+          </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <div class="inv-pagination" id="inv-pagination"></div>
+      </div>
+
+      <!-- RFQ CTA -->
+      <div class="inv-cta">
+        <h3>Can't find the part you need?</h3>
+        <p>Our team has access to a global network of suppliers. Send us your RFQ and we'll source it for you.</p>
+        <div class="btn-group">
+          <a href="index.html#contact" class="btn btn-primary">Submit an RFQ</a>
+          <a href="mailto:easternaeroparts@gmail.com" class="btn btn-outline">Email Directly</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer strip -->
+  <div style="background:rgba(0,0,0,.3);border-top:1px solid rgba(255,255,255,.08);padding:1.5rem 0;text-align:center;font-size:.82rem;color:rgba(255,255,255,.3);">
+    &copy; 2025 Eastern Aero Parts LLC. All rights reserved.
+  </div>
+
+  <script src="js/main.js"></script>
+  <script src="data/inventory.js"></script>
+  <script>
+  /* ============================================================
+     INVENTORY — CSV LOADER
+     Edit data/inventory.csv to update the inventory.
+     Required columns: Part Number, Description, Condition, Qty, Status
+     Optional column:  Aircraft  (used for the Aircraft filter)
+     ============================================================ */
+
+  const ROWS_PER_PAGE = 10;
+  let allParts  = [];
+  let filtered  = [];
+  let currentPage = 1;
+
+/* --- Condition badge class --- */
+  function condClass(c) {
+    const m = {
+      'New': 'new', 'New Surplus': 'ns', 'Overhauled': 'oh',
+      'Serviceable': 'svc', 'As Removed': 'ar',
+      'Repaired': 'rp', 'Functional New': 'fn'
+    };
+    return m[c] || 'svc';
+  }
+
+  /* --- Status badge class --- */
+  function statusClass(s) {
+    const m = { 'Available': 'avail', 'Limited': 'ltd', 'AOG': 'aog' };
+    return m[s] || 'avail';
+  }
+
+  /* --- Render a page of rows --- */
+  function renderPage(page) {
+    currentPage = page;
+    const tbody = document.getElementById('inv-tbody');
+    tbody.innerHTML = '';
+    const start = (page - 1) * ROWS_PER_PAGE;
+    const pageItems = filtered.slice(start, start + ROWS_PER_PAGE);
+
+    pageItems.forEach(p => {
+      const pn   = p['Part Number']    || '';
+      const desc = p['Description']    || '';
+      const cond = p['Condition']      || '';
+      const qty  = p['Qty']            || '';
+      const stat = p['Status']         || '';
+      const cat  = p['Category']       || '';
+      const mfr  = p['Manufacturer']   || '—';
+      const ser  = p['Serial Number']  || '—';
+      const rdate= p['Received Date']  || '—';
+
+      /* Main row */
+      const tr = document.createElement('tr');
+      tr.className = 'inv-row';
+      tr.dataset.condition = cond;
+      tr.dataset.aircraft  = cat;
+      tr.innerHTML = `
+        <td class="pn">${pn}</td>
+        <td class="desc">${desc}</td>
+        <td><span class="cond-badge ${condClass(cond)}">${cond}</span></td>
+        <td>${qty}</td>
+        <td><span class="status-badge ${statusClass(stat)}">${stat}</span></td>`;
+      tr.addEventListener('click', () => toggleDetail(tr));
+      tbody.appendChild(tr);
+
+      /* Detail row — show each individual unit if consolidated */
+      const items = p._items || [p];
+      const serialList = items.map((it, idx) => {
+        const c = it['Condition'] || '';
+        const d = it['Received Date'] || '—';
+        return `<div class="inv-unit-row">
+          <span class="inv-unit-num">${idx + 1}</span>
+          <span class="cond-badge ${condClass(c)}" style="font-size:.65rem;padding:.15rem .5rem;">${c}</span>
+          <span style="color:rgba(255,255,255,.2);font-size:.78rem;font-style:italic;">S/N disclosed upon RFQ</span>
+          <span style="color:rgba(255,255,255,.35);font-size:.78rem;margin-left:auto;">${d}</span>
+        </div>`;
+      }).join('');
+
+      const dr = document.createElement('tr');
+      dr.className = 'inv-detail-row';
+      dr.innerHTML = `<td colspan="5" class="inv-detail-cell">
+        <div class="inv-detail-grid">
+          <div class="inv-detail-field"><label>Part Number</label><span>${pn}</span></div>
+          <div class="inv-detail-field"><label>Manufacturer</label><span>${mfr}</span></div>
+          <div class="inv-detail-field"><label>Category</label><span>${cat || '—'}</span></div>
+          <div class="inv-detail-field"><label>Total Qty Available</label><span>${qty}</span></div>
+          <div class="inv-detail-field"><label>Status</label><span>${stat}</span></div>
+        </div>
+        ${items.length > 1 ? `<div class="inv-units-label">Individual Units (${items.length})</div>` : ''}
+        <div class="inv-units-list">${serialList}</div>
+        <div class="inv-detail-actions">
+          <a href="index.html?subject=rfq#contact" class="btn btn-primary" style="font-size:.85rem;padding:.55rem 1.2rem;">Request Quote</a>
+          <a href="mailto:rfq@eastern-aero.com?subject=RFQ: ${encodeURIComponent(pn)}&body=Part Number: ${encodeURIComponent(pn)}%0ADescription: ${encodeURIComponent(desc)}%0AQty Required: " class="btn btn-outline" style="font-size:.85rem;padding:.55rem 1.2rem;">Email RFQ</a>
+        </div>
+      </td>`;
+      tbody.appendChild(dr);
+    });
+
+    renderPagination();
+  }
+
+  /* --- Pagination buttons --- */
+  function renderPagination() {
+    const total = Math.ceil(filtered.length / ROWS_PER_PAGE);
+    const wrap  = document.getElementById('inv-pagination');
+    wrap.innerHTML = '';
+    if (total <= 1) return;
+
+    const mkBtn = (label, page, active, disabled) => {
+      const b = document.createElement('button');
+      b.className = 'page-btn' + (active ? ' active' : '');
+      b.textContent = label;
+      b.disabled = disabled;
+      if (!disabled) b.addEventListener('click', () => renderPage(page));
+      return b;
+    };
+
+    wrap.appendChild(mkBtn('‹', currentPage - 1, false, currentPage === 1));
+    for (let i = 1; i <= total; i++) {
+      if (total > 7 && i > 2 && i < total - 1 && Math.abs(i - currentPage) > 1) {
+        if (i === 3 || i === total - 2) wrap.appendChild(mkBtn('…', i, false, true));
+        continue;
+      }
+      wrap.appendChild(mkBtn(i, i, i === currentPage, false));
+    }
+    wrap.appendChild(mkBtn('›', currentPage + 1, false, currentPage === total));
+  }
+
+  /* --- Show empty state prompt --- */
+  function showEmptyState(msg) {
+    const tbody = document.getElementById('inv-tbody');
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:3.5rem 1rem;color:rgba(255,255,255,.3);font-size:.9rem;">${msg}</td></tr>`;
+    document.getElementById('inv-pagination').innerHTML = '';
+  }
+
+  /* --- Consolidate duplicate PNs into single rows --- */
+  function consolidate(parts) {
+    const map = new Map();
+    parts.forEach(p => {
+      const key = p['Part Number'];
+      if (!map.has(key)) {
+        map.set(key, { ...p, _items: [p] });
+      } else {
+        const existing = map.get(key);
+        existing['Qty'] = String((parseInt(existing['Qty']) || 0) + (parseInt(p['Qty']) || 0));
+        // merge conditions
+        if (existing['Condition'] !== p['Condition']) existing['Condition'] = 'Mixed';
+        // merge status: if any available, show available
+        if (p['Status'] === 'Available') existing['Status'] = 'Available';
+        existing._items.push(p);
+      }
+    });
+    return Array.from(map.values());
+  }
+
+  /* --- Run search (called on button click or Enter) --- */
+  function runSearch() {
+    const q    = document.getElementById('inv-search-input').value.trim();
+    const cond = document.getElementById('filter-condition').value;
+    const ac   = document.getElementById('filter-aircraft').value;
+
+    if (!q && !cond && !ac) {
+      showEmptyState('Enter a part number or description to search the inventory.');
+      document.getElementById('inv-count').textContent = `${allParts.length} parts in stock`;
+      return;
+    }
+
+    const ql = q.toLowerCase();
+    const raw = allParts.filter(p => {
+      const text = (p['Part Number'] + ' ' + p['Description']).toLowerCase();
+      const matchQ = !ql   || text.includes(ql);
+      const matchC = !cond || p['Condition'] === cond;
+      const matchA = !ac   || (p['Category'] || '').includes(ac);
+      return matchQ && matchC && matchA;
+    });
+
+    filtered = consolidate(raw);
+
+    if (filtered.length === 0) {
+      showEmptyState('No parts found. <a href="mailto:easternaeroparts@gmail.com" style="color:var(--red);text-decoration:underline;">Submit an RFQ</a> and we\'ll source it for you.');
+      document.getElementById('inv-count').textContent = '0 results';
+    } else {
+      document.getElementById('inv-count').textContent =
+        `${filtered.length} line item${filtered.length !== 1 ? 's' : ''}`;
+      renderPage(1);
+    }
+  }
+
+  /* --- Expand/collapse detail row --- */
+  function toggleDetail(row) {
+    const detail = row.nextElementSibling;
+    if (!detail || !detail.classList.contains('inv-detail-row')) return;
+    const isOpen = detail.classList.contains('open');
+    document.querySelectorAll('.inv-detail-row.open').forEach(r => r.classList.remove('open'));
+    if (!isOpen) detail.classList.add('open');
+  }
+
+  /* --- Load from inline JS data --- */
+  (function loadInventory() {
+    if (!window.INVENTORY_DATA || !window.INVENTORY_DATA.length) {
+      document.getElementById('inv-loading').innerHTML =
+        '<p style="color:rgba(255,100,100,.7)">Inventory data not found.<br>Make sure <code>data/inventory.js</code> is present.</p>';
+      return;
+    }
+    allParts = window.INVENTORY_DATA;
+    filtered = [];
+    document.getElementById('inv-count').textContent = `${allParts.length} parts in stock`;
+    document.getElementById('inv-loading').style.display = 'none';
+    document.getElementById('inv-wrap').style.display   = 'block';
+    showEmptyState('Enter a part number or description and press Search.');
+  })();
+
+  /* Search button & Enter key */
+  document.getElementById('inv-search-btn').addEventListener('click', runSearch);
+  document.getElementById('inv-search-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') runSearch();
+  });
+  /* Dropdowns trigger search immediately if already searched */
+  document.getElementById('filter-condition').addEventListener('change', () => {
+    if (document.getElementById('inv-search-input').value.trim() ||
+        document.getElementById('filter-aircraft').value) runSearch();
+  });
+  document.getElementById('filter-aircraft').addEventListener('change', () => {
+    if (document.getElementById('inv-search-input').value.trim() ||
+        document.getElementById('filter-condition').value) runSearch();
+  });
+
+  /* Spinner keyframe */
+  const style = document.createElement('style');
+  style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+  document.head.appendChild(style);
+  </script>
+</body>
+</html>
